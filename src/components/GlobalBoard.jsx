@@ -1,7 +1,7 @@
 import React from 'react';
 import LocalBoard from './LocalBoard';
 import { connect } from 'react-redux';
-import { globalWinner } from '../actions/actions';
+import { globalWinner, IGlobalWinner } from '../actions/actions';
 
 class GlobalBoard extends React.Component {
   constructor(props) {
@@ -63,6 +63,21 @@ class GlobalBoard extends React.Component {
         return globalWinner({ boardId: this.props.boardId, mark });
       }
     }
+  }
+
+  addClasses(board) {
+    // let target = document.getElementById(`gl-board${i}`);
+    let classes = '';
+    if (board.boardWinner) {
+      classes = 'not-playable';
+    } else if (!(board.position.includes(null))) {
+      classes = 'cat-condition';
+    } else if (this.props.gameStatus.lastSquare === board || this.props.gameStatus.lastSquare === null) {
+      classes = 'mark-playable';
+    } else {
+      classes = '';
+    }
+    return classes;
   }
 
   render() {
@@ -139,12 +154,9 @@ class GlobalBoard extends React.Component {
         <div className='global-winner' id='gameBoard' onClick={() => window.location.reload()}>
         </div>
         {this.props.boardData.map((board, index) => (
-          <div key={index} className={`${this.bgColor} local-board mark-playable`} id={'gl-board' + index}>
+          <div key={index} className={`${this.bgColor} local-board ${this.addClasses(board)}`} id={'gl-board' + index}>
             <LocalBoard
-              gameStatus={this.props.gameStatus}
-              dispatch={this.props.dispatch}
               localData={board}
-              boardData={this.props.boardData}
               boardId={index}
               globalCheckWin={this.checkWin}
             />
@@ -162,4 +174,10 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps, { globalWinner })(GlobalBoard);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    globalWinner: (args) => dispatch(globalWinner(args))
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(GlobalBoard);

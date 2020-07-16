@@ -72,7 +72,6 @@ export default (state: IBoardState = initialState, action: any) => {
   const { type, payload } = action;
   switch (type) {
     case AppEvents.MARK: {
-      console.log(action)
       const { squareId, boardId, mark } = payload;
       const newState: IBoardState = state.slice();
       newState[boardId].position[squareId] = mark;

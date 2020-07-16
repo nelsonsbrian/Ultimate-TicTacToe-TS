@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import GlobalBoard from './GlobalBoard';
 import Header from './Header';
 import Status from './Status';
 
-function App() {
+const App: React.FC = (): ReactElement => {
   return (
     <div>
       <Header />

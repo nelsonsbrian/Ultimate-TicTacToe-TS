@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { connect } from 'react-redux';
-import { mark, nextTurn, localWinner } from '../actions/actions';
+import { mark, nextTurn, localWinner, IMark, INextTurn, ILocalWinner } from '../actions/actions';
+import { IAppState } from '../store';
 
-function LocalBoard(props) {
-  function handleMark(square) {
-    let devMode = false; // true = place mark anywhere. false = game mode.
-    if (props.gameStatus.lastSquare === props.boardId || props.gameStatus.lastSquare === null || devMode) {
-      if (props.localData.position[square] === null) {
+const LocalBoard: React.FC = (props: any): ReactElement => {
+  const { gameStatus, boardId, globalCheckWin, localData, boardData } = props;
+  function handleMark(square: number) {
+    const devMode: boolean = false; // true = place mark anywhere. false = game mode.
+    if (gameStatus.lastSquare === boardId || gameStatus.lastSquare === null || devMode) {
+      if (localData.position[square] === null) {
         props.mark({
           squareId: square,
-          boardId: props.boardId,
-          mark: props.gameStatus.playerTurn
+          boardId: boardId,
+          mark: gameStatus.playerTurn
         });
         checkWin();
-        props.globalCheckWin();
-        let lastSquare = square;
-        if (props.boardData[square].boardWinner) {
+        globalCheckWin();
+        let lastSquare: number | null = square;
+        if (boardData[square].boardWinner) {
           lastSquare = null;
         }
         props.nextTurn({
@@ -26,8 +28,8 @@ function LocalBoard(props) {
   }
 
   function checkWin() {
-    let square = props.localData.position;
-    let winConditions = [
+    const square: Array<number> = localData.position;
+    const winConditions = [
       [0, 1, 2],
       [3, 4, 5],
       [6, 7, 8],
@@ -38,33 +40,33 @@ function LocalBoard(props) {
       [2, 4, 6]
     ];
     let mark = null;
-    let targetDiv = document.getElementById(`board${props.boardId}`);
+    const targetDiv: HTMLElement | null | any = document.getElementById(`board${props.boardId}`);
     for (let i = 0; i < winConditions.length; i++) {
       let threeInARow = 0;
       for (let j = 0; j <= 2; j++) {
-        if (square[winConditions[i][j]] === props.gameStatus.playerTurn) {
+        if (square[winConditions[i][j]] === gameStatus.playerTurn) {
           threeInARow++;
         }
       }
       if (threeInARow === 3) {
-        mark = props.gameStatus.playerTurn;
+        mark = gameStatus.playerTurn;
         targetDiv.appendChild(document.createTextNode(`${mark}`));
         if (mark === 'X') {
           targetDiv.classList.add('mark-x');
         } else {
           targetDiv.classList.add('mark-o');
         }
-        return props.localWinner({ boardId: props.boardId, mark })
-      } else if (!props.localData.position.includes(null)) {
+        return props.localWinner({ boardId: boardId, mark })
+      } else if (!localData.position.includes(null)) {
         mark = 'cat';
-        return props.localWinner({ boardId: props.boardId, mark })
+        return props.localWinner({ boardId: boardId, mark })
       }
     }
   }
 
   return (
     <div className='local-wrapper' id='local-board'>
-      <style jsx="true">{`
+      <style>{`
         #lc-board3, #lc-board4, #lc-board5 {
           border-top: 2px solid #D90E79;
           border-bottom: 2px solid #D90E79;
@@ -114,12 +116,12 @@ function LocalBoard(props) {
           cursor: default;
         }
       `}</style>
-      {props.localData.position.map((square, index) => (
+      {localData.position.map((square: string, index: number) => (
         <div className='square-wrapper' key={index} onClick={() => { handleMark(index); }}>
-          <div className='board-winner' id={`board${props.boardId}`}>
+          <div className='board-winner' id={`board${boardId}`}>
           </div>
           <div className='player-mark square' id={'lc-board' + index}>
-            {props.localData.boardWinner ? (
+            {localData.boardWinner ? (
               <p>{square}</p>
             ) : (
                 square === 'X' ? (
@@ -135,10 +137,19 @@ function LocalBoard(props) {
   );
 }
 
-const mapDispatchToProps = {
-  mark: mark,
-  nextTurn: nextTurn,
-  localWinner: localWinner,
+const mapStateToProps = (state: IAppState) => {
+  return {
+    boardData: state.boardData,
+    gameStatus: state.gameStatus
+  };
+};
+
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    mark: (args: IMark) => dispatch(mark(args)),
+    nextTurn: (args: INextTurn) => dispatch(nextTurn(args)),
+    localWinner: (args: ILocalWinner) => dispatch(localWinner(args)),
+  }
 }
 
-export default connect(null, mapDispatchToProps)(LocalBoard);
+export default connect(mapStateToProps, mapDispatchToProps)(LocalBoard);
