@@ -1,8 +1,7 @@
 import React from 'react';
 import LocalBoard from './LocalBoard';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-
+import { globalWinner } from '../actions/actions';
 
 class GlobalBoard extends React.Component {
   constructor(props) {
@@ -39,12 +38,8 @@ class GlobalBoard extends React.Component {
       [0, 4, 8],
       [2, 4, 6]
     ];
-    const { dispatch } = this.props;
-    let action = {
-      type: 'GLOBAL_WINNER',
-      boardId: this.props.boardId,
-      mark: null
-    };
+
+    let mark = null;
     let targetDiv = document.getElementById('gameBoard');
     let boardWinnerCount = this.props.boardData.filter(lBoard => (lBoard.boardWinner !== null)).length;
     for (let i = 0; i < winConditions.length; i++) {
@@ -55,17 +50,17 @@ class GlobalBoard extends React.Component {
         }
       }
       if (threeInARow === 3) {
-        action.mark = this.props.gameStatus.playerTurn;
-        targetDiv.appendChild(document.createTextNode(`${action.mark}`));
-        if (action.mark === 'X') {
+        mark = this.props.gameStatus.playerTurn;
+        targetDiv.appendChild(document.createTextNode(`${mark}`));
+        if (mark === 'X') {
           targetDiv.classList.add('mark-x', 'animated', 'flash', 'infinite');
         } else {
           targetDiv.classList.add('mark-o', 'animated', 'flash', 'infinite');
         }
-        return dispatch(action);
+        return globalWinner({ boardId: this.props.boardId, mark });
       } else if (boardWinnerCount >= 9) {
-        action.mark = 'cat';
-        return dispatch(action);
+        mark = 'cat';
+        return globalWinner({ boardId: this.props.boardId, mark });
       }
     }
   }
@@ -160,13 +155,6 @@ class GlobalBoard extends React.Component {
   }
 }
 
-GlobalBoard.propTypes = {
-  boardData: PropTypes.array,
-  dispatch: PropTypes.func,
-  gameStatus: PropTypes.object,
-  boardId: PropTypes.number
-};
-
 const mapStateToProps = state => {
   return {
     boardData: state.boardData,
@@ -174,4 +162,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(GlobalBoard);
+export default connect(mapStateToProps, { globalWinner })(GlobalBoard);

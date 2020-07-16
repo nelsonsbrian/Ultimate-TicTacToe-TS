@@ -1,30 +1,26 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { mark, nextTurn, localWinner } from '../actions/actions';
 
 function LocalBoard(props) {
   function handleMark(square) {
     let devMode = false; // true = place mark anywhere. false = game mode.
     if (props.gameStatus.lastSquare === props.boardId || props.gameStatus.lastSquare === null || devMode) {
       if (props.localData.position[square] === null) {
-        const { dispatch } = props;
-        const boardAction = {
-          type: 'MARK',
+        props.mark({
           squareId: square,
           boardId: props.boardId,
           mark: props.gameStatus.playerTurn
-        };
-        dispatch(boardAction);
+        });
         checkWin();
         props.globalCheckWin();
-        let gameAction = {
-          type: 'NEXT_TURN',
-          lastSquare: square
-        };
+        let lastSquare = square;
         if (props.boardData[square].boardWinner) {
-          gameAction.lastSquare = null;
+          lastSquare = null;
         }
-        dispatch(gameAction);
+        props.nextTurn({
+          lastSquare
+        })
       }
     }
   }
@@ -41,12 +37,7 @@ function LocalBoard(props) {
       [0, 4, 8],
       [2, 4, 6]
     ];
-    const { dispatch } = props;
-    let action = {
-      type: 'LOCAL_WINNER',
-      boardId: props.boardId,
-      mark: null
-    };
+    let mark = null;
     let targetDiv = document.getElementById(`board${props.boardId}`);
     for (let i = 0; i < winConditions.length; i++) {
       let threeInARow = 0;
@@ -56,17 +47,17 @@ function LocalBoard(props) {
         }
       }
       if (threeInARow === 3) {
-        action.mark = props.gameStatus.playerTurn;
-        targetDiv.appendChild(document.createTextNode(`${action.mark}`));
-        if (action.mark === 'X') {
+        mark = props.gameStatus.playerTurn;
+        targetDiv.appendChild(document.createTextNode(`${mark}`));
+        if (mark === 'X') {
           targetDiv.classList.add('mark-x');
         } else {
           targetDiv.classList.add('mark-o');
         }
-        return dispatch(action);
+        return props.localWinner({ boardId: props.boardId, mark })
       } else if (!props.localData.position.includes(null)) {
-        action.mark = 'cat';
-        return dispatch(action);
+        mark = 'cat';
+        return props.localWinner({ boardId: props.boardId, mark })
       }
     }
   }
@@ -131,12 +122,12 @@ function LocalBoard(props) {
             {props.localData.boardWinner ? (
               <p>{square}</p>
             ) : (
-              square === 'X' ? (
-                <p className='mark-x'>{square}</p>
-              ) : (
-                <p className='mark-o'>{square}</p>
-              )
-            )}
+                square === 'X' ? (
+                  <p className='mark-x'>{square}</p>
+                ) : (
+                    <p className='mark-o'>{square}</p>
+                  )
+              )}
           </div>
         </div>
       ))}
@@ -144,13 +135,10 @@ function LocalBoard(props) {
   );
 }
 
-LocalBoard.propTypes = {
-  boardId: PropTypes.number,
-  localData: PropTypes.object,
-  dispatch: PropTypes.func,
-  gameStatus: PropTypes.object,
-  boardData: PropTypes.array,
-  globalCheckWin: PropTypes.func
-};
+const mapDispatchToProps = {
+  mark: mark,
+  nextTurn: nextTurn,
+  localWinner: localWinner,
+}
 
-export default LocalBoard;
+export default connect(null, mapDispatchToProps)(LocalBoard);
